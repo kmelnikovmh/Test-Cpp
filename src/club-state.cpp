@@ -13,6 +13,8 @@
 
 namespace test_cpp {
 
+constexpr int ROUNDING_BIAS = 59;
+
 // State
 bool ClubState::is_open(std::chrono::minutes time) const {
     return m_time_to_open <= time && time < m_time_to_close;
@@ -25,7 +27,7 @@ bool ClubState::has_client(const std::string& name) const {
 bool ClubState::is_client_sit(const std::string& name) const {
     auto it_client = m_clients.find(name);
     if (it_client == m_clients.end()) {
-        throw std::runtime_error("Client not found");
+        throw std::runtime_error("Client " + name + " not found");
     }
     return it_client->second.m_state == ClientState::AtTable;
 }
@@ -33,15 +35,15 @@ bool ClubState::is_client_sit(const std::string& name) const {
 bool ClubState::has_free_table() const {
     return std::any_of(m_tables.begin(), 
                        m_tables.end(),
-                       [](const Table& t){ return t.m_curr_client == nullptr; });
+                       [](const Table& t){ return t.m_is_free == true; });
 }
 
 bool ClubState::is_free_table(int table_id) const {
     int idx = table_id - 1;
     if (idx < 0 || static_cast<int>(m_tables.size()) <= idx) {
-        throw std::runtime_error("Incorrect table id");
+        throw std::runtime_error("Incorrect table id: " + std::to_string(table_id));
     }
-    return m_tables[idx].m_curr_client == nullptr;
+    return m_tables[idx].m_is_free == true;
 }
 
 bool ClubState::wait_queue_empty() const {
@@ -72,7 +74,7 @@ std::chrono::minutes ClubState::get_time_to_close() const {
 int ClubState::get_id_table_from_client(const std::string& name) const {
     auto it_client = m_clients.find(name);
     if (it_client == m_clients.end()) {
-        throw std::runtime_error("Client not found");
+        throw std::runtime_error("Client " + name + " not found");
     }
     return it_client->second.m_id_table;
 }
@@ -94,13 +96,13 @@ void ClubState::add_client(const std::string& name) {
 void ClubState::sit_client(const std::string& name, int table_id, std::chrono::minutes time) {
     int idx = table_id - 1;
     if (!has_client(name)) {
-        throw std::runtime_error("Client not found");
+        throw std::runtime_error("Client " + name + " not found");
     }
     if (idx < 0 || static_cast<int>(m_tables.size()) <= idx) {
-        throw std::out_of_range("Invalid table id");
+        throw std::out_of_range("Incorrect table id: " + std::to_string(table_id));
     }
     Table& table = m_tables[idx];
-    table.m_curr_client = &m_clients[name];
+    table.m_is_free = false;
     table.m_curr_start_busy = time;
 
     ClientInfo& client_info = m_clients[name];
@@ -111,7 +113,7 @@ void ClubState::sit_client(const std::string& name, int table_id, std::chrono::m
 void ClubState::get_up_from_table(const std::string& name, std::chrono::minutes time) {
     auto it_client = m_clients.find(name);
     if (it_client == m_clients.end()) {
-        throw std::runtime_error("Client not found");
+        throw std::runtime_error("Client " + name + " not found");
     }
 
     ClientInfo& client_info = it_client->second;
@@ -123,10 +125,10 @@ void ClubState::get_up_from_table(const std::string& name, std::chrono::minutes 
 
     auto duration = time - table.m_curr_start_busy;
     table.m_busy += duration;
-    int hours = (duration.count() + 59) / 60;
+    int hours = (duration.count() + ROUNDING_BIAS) / 60;
     table.m_salary += hours * m_cost_table_per_hour;
 
-    table.m_curr_client = nullptr;
+    table.m_is_free = true;
     table.m_curr_start_busy = std::chrono::minutes::zero();
 
     client_info.m_state = ClientState::JustInClub;
@@ -136,7 +138,7 @@ void ClubState::get_up_from_table(const std::string& name, std::chrono::minutes 
 void ClubState::enqueue_client(const std::string& name) {
     auto it_client = m_clients.find(name);
     if (it_client == m_clients.end()) {
-        throw std::runtime_error("Client not found");
+        throw std::runtime_error("Client " + name + " not found");
     }
     ClientInfo& client_info = it_client->second;
     client_info.m_state = ClientState::Waiting;
@@ -146,7 +148,7 @@ void ClubState::enqueue_client(const std::string& name) {
 
 std::string ClubState::pop_waiting_client() {
     if (m_wait_queue.empty()) {
-        throw std::runtime_error("Queue empty");
+        throw std::runtime_error("Queue empty, can't call pop_waiting_client");
     }
     std::string name = m_wait_queue.front();
     m_wait_queue.pop();
@@ -156,7 +158,7 @@ std::string ClubState::pop_waiting_client() {
 void ClubState::remove_client(const std::string& name) {
     auto it_client = m_clients.find(name);
     if (it_client == m_clients.end()) {
-        throw std::runtime_error("Client not found");
+        throw std::runtime_error("Client " + name + " not found");
     }
     m_clients.erase(it_client);
 }

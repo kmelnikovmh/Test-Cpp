@@ -11,7 +11,7 @@ namespace test_cpp {
 
 Events run_day(const EventsInput& input_events, ClubState& club) {
     Events result;
-    for (auto& ev : input_events) {
+    for (const auto& ev : input_events) {
         EventVariant ev_full = std::visit([](auto const& concrete) -> EventVariant {
             return concrete;
         }, ev);

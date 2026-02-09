@@ -1,5 +1,5 @@
-#ifndef _TEST_EVENT_
-#define _TEST_EVENT_
+#ifndef TEST_EVENT_HPP
+#define TEST_EVENT_HPP
 
 #include <chrono>
 #include <string>

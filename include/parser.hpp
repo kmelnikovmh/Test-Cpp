@@ -1,5 +1,5 @@
-#ifndef _TEST_PARSER_
-#define _TEST_PARSER_
+#ifndef TEST_PARSER_HPP
+#define TEST_PARSER_HPP
 
 #include <string>
 #include <chrono>

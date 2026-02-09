@@ -27,10 +27,10 @@ EventClientArrived::EventClientArrived(std::chrono::minutes time_exec,
 
 std::optional<EventVariant> EventClientArrived::apply_to_club(ClubState &club) const {
     if (club.has_client(m_client_name)) {
-        return EventError(m_time_exec, static_cast<EventID>(13), "YouShallNotPass");
+        return EventError(m_time_exec, EventID::Error, "YouShallNotPass");
     }
     if (!club.is_open(m_time_exec)) {
-        return EventError(m_time_exec, static_cast<EventID>(13), "NotOpenYet");
+        return EventError(m_time_exec, EventID::Error, "NotOpenYet");
     }
     club.add_client(m_client_name);
     return std::nullopt;
@@ -51,10 +51,10 @@ EventClientSitDownAtTable::EventClientSitDownAtTable(std::chrono::minutes time_e
 // Нет по ТЗ NotOpenYet (учтено инвариантом клиенты уходят после закрытия и клиента нет раньше прихода)
 std::optional<EventVariant> EventClientSitDownAtTable::apply_to_club(ClubState &club) const {
     if (!club.is_free_table(m_table_id)) {
-        return EventError(m_time_exec, static_cast<EventID>(13), "PlaceIsBusy");
+        return EventError(m_time_exec, EventID::Error, "PlaceIsBusy");
     }
     if (!club.has_client(m_client_name)) {
-        return EventError(m_time_exec, static_cast<EventID>(13), "ClientUnknown");
+        return EventError(m_time_exec, EventID::Error, "ClientUnknown");
     }
     if (club.is_client_sit(m_client_name)) {
         club.get_up_from_table(m_client_name, m_time_exec);
@@ -77,11 +77,11 @@ EventClientWait::EventClientWait(std::chrono::minutes time_exec,
 // А если он уже сидит? А если уже в очереди? Можно сломать все
 std::optional<EventVariant> EventClientWait::apply_to_club(ClubState &club) const {
     if (club.has_free_table()) {
-        return EventError(m_time_exec, static_cast<EventID>(13), "ICanWaitNoLonger!");
+        return EventError(m_time_exec, EventID::Error, "ICanWaitNoLonger!");
     }
     if (club.wait_queue_full()) {
         club.remove_client(m_client_name);
-        return EventClientLeft(m_time_exec, static_cast<EventID>(11), m_client_name);
+        return EventClientLeft(m_time_exec, EventID::SystemClientLeft, m_client_name);
     }
     club.enqueue_client(m_client_name);
     return std::nullopt;
@@ -100,7 +100,7 @@ EventClientLeft::EventClientLeft(std::chrono::minutes time_exec,
 // А если он в очереди стоит в середине? Или все вставшие в очередь обязательно сядут?
 std::optional<EventVariant> EventClientLeft::apply_to_club(ClubState &club) const {
     if (!club.has_client(m_client_name)) {
-        return EventError(m_time_exec, static_cast<EventID>(13), "ClientUnknown");
+        return EventError(m_time_exec, EventID::Error, "ClientUnknown");
     }
     int curr_table = 0;
     if (club.is_client_sit(m_client_name)) {
@@ -111,7 +111,7 @@ std::optional<EventVariant> EventClientLeft::apply_to_club(ClubState &club) cons
     if (curr_table && !club.wait_queue_empty()) {
         std::string next_client = club.pop_waiting_client();
         club.sit_client(next_client, curr_table, m_time_exec);
-        return EventClientSitDownAtTable(m_time_exec, static_cast<EventID>(12), next_client, curr_table);
+        return EventClientSitDownAtTable(m_time_exec, EventID::SystemClientSitDown, next_client, curr_table);
     }
     return std::nullopt;
 }

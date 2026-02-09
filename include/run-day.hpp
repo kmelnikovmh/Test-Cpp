@@ -1,5 +1,5 @@
-#ifndef _TEST_RUN_DAY_
-#define _TEST_RUN_DAY_
+#ifndef TEST_RUN_DAY_HPP
+#define TEST_RUN_DAY_HPP
 
 #include "events.hpp"
 #include "club-state.hpp"

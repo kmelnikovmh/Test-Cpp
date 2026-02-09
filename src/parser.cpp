@@ -1,4 +1,5 @@
 #include "parser.hpp"
+#include <events.hpp>
 
 #include <sstream>
 #include <iostream>
@@ -115,7 +116,7 @@ EventsInput parse_events(std::istream& in, const ClubInitConfig& config) {
                 std::cout << line << "\n"; 
                 std::exit(1); 
             }
-            events.emplace_back(EventClientArrived{time, static_cast<EventID>(1), name});
+            events.emplace_back(EventClientArrived{time, EventID::ClientArrived, name});
         } else if (id == 2) {
             int table;
             if (!(iss >> name >> table) || !valid_client_name(name) || table <= 0 || 
@@ -123,19 +124,19 @@ EventsInput parse_events(std::istream& in, const ClubInitConfig& config) {
                 std::cout << line << "\n"; 
                 std::exit(1); 
             }
-            events.emplace_back(EventClientSitDownAtTable{time, static_cast<EventID>(2), name, table});
+            events.emplace_back(EventClientSitDownAtTable{time, EventID::ClientSitDown, name, table});
         } else if (id == 3) {
             if (!(iss >> name) || !valid_client_name(name) || has_extra_params(iss)) { 
                 std::cout << line << "\n"; 
                 std::exit(1); 
             }
-            events.emplace_back(EventClientWait{time, static_cast<EventID>(3), name});
+            events.emplace_back(EventClientWait{time, EventID::ClientWait, name});
         } else if (id == 4) {
             if (!(iss >> name) || !valid_client_name(name) || has_extra_params(iss)) { 
                 std::cout << line << "\n"; 
                 std::exit(1); 
             }
-            events.emplace_back(EventClientLeft{time, static_cast<EventID>(4), name});
+            events.emplace_back(EventClientLeft{time, EventID::ClientLeft, name});
         } else {
             std::cout << line << "\n"; 
             std::exit(1);

@@ -1,5 +1,5 @@
-#ifndef _TEST_CLUB_STATE_
-#define _TEST_CLUB_STATE_
+#ifndef TEST_CLUB_STATE_HPP
+#define TEST_CLUB_STATE_HPP
 
 #include <string>
 #include <vector>
@@ -24,7 +24,7 @@ struct ClientInfo {
 };
 
 struct Table {
-    ClientInfo const *m_curr_client = nullptr;
+    bool m_is_free = true;
     std::chrono::minutes m_curr_start_busy = std::chrono::minutes::zero();
     std::chrono::minutes m_busy = std::chrono::minutes::zero();
     int m_salary = 0;
@@ -93,6 +93,8 @@ public:
 
     void remove_client(const std::string& name);
 };
+
+// Думал еще написать классы для пользовательских исключений, но это похоже на оверкилл для тестового задания
 
 } // namespace test_cpp
 
