@@ -1,0 +1,41 @@
+#Output-dir ignore
+**/build/
+**/out/
+**/bin/
+**/__pycache__/
+
+
+#Cmake-build-artifacts-igonore
+**/CMakeCache.txt
+**/CMakeFiles/
+**/CMakeScripts/
+**/Makefile
+**/cmake-build-debug/
+**/cmake_install.cmake
+**/install_manifest.txt
+**/compile_commands.json
+**/CTestTestfile.cmake
+
+
+#bin-file igonore
+**/*.o
+**/*.a
+**/*.so
+**/*.exe
+**/*.out
+**/*.bin
+**/test-main
+
+
+#IDE-files ignore
+**/.idea/
+**/.vscode/
+
+
+#Logs/cache ignore
+**/*.log
+**/*.cache
+
+
+#MacOS Finder cache ignore
+**/.DS_Store
