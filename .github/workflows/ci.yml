@@ -72,8 +72,5 @@ jobs:
           -A x64
           -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
-      - name: Build
-        run: cmake --build build --config Debug
-
       - name: Run tests
-        run: ctest --test-dir build -C Debug --output-on-failure
+        run: cmake --build build --target execute-tests --config Debug
