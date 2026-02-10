@@ -43,7 +43,7 @@ function(add_gtest TEST_NAME TEST_SRC)
         )
     endif()
 
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" AND NOT WIN32)
         target_compile_options(${TEST_NAME} PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
         target_link_options(${TEST_NAME} PRIVATE -fsanitize=address,undefined)
     endif()
