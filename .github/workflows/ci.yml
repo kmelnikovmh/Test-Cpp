@@ -17,7 +17,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake clang clang-tidy g++ git wget ninja-build libgtest-dev
-          # Сборка GTest
           cd /usr/src/gtest
           sudo cmake .
           sudo make
@@ -29,7 +28,7 @@ jobs:
       - name: Run Tests
         run: cmake --build build --target execute-tests
 
-  build-windows-msvc:
+  windows-msvc:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
@@ -44,10 +43,13 @@ jobs:
       - name: Configure CMake
         run: cmake -B build -S . -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
-      - name: Run Tests
-        run: cmake --build build --target execute-tests
+      - name: Build Tests
+        run: cmake --build build --target execute-tests --config Debug
 
-  build-windows-mingw:
+      - name: Run Tests
+        run: ctest --test-dir build --build-config Debug --output-on-failure
+
+  windows-mingw:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
@@ -58,12 +60,18 @@ jobs:
           install: >
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-cmake
-            mingw-w64-x86_64-google-test
+            mingw-w64-x86_64-gtest
+          msystem: MINGW64
+          path-type: minimal
 
       - name: Configure CMake
         shell: msys2 {0}
         run: cmake -B build -S . -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug
 
-      - name: Run Tests
+      - name: Build Tests
         shell: msys2 {0}
         run: cmake --build build --target execute-tests
+
+      - name: Run Tests
+        shell: msys2 {0}
+        run: ctest --test-dir build --output-on-failure
