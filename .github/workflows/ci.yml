@@ -22,19 +22,12 @@ jobs:
           sudo cmake .
           sudo make
           sudo cp lib/libgtest*.a /usr/lib/
-      - name: Show Compiler Versions
-        run: |
-          gcc --version
-          clang --version
-          cmake --version
+
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 
-      - name: Build Tests
-        run: cmake --build build
-
       - name: Run Tests
-        run: env GTEST_COLOR=1 cmake --build build --target execute-tests
+        run: cmake --build build --target execute-tests
 
   build-windows-msvc:
     runs-on: windows-latest
@@ -51,10 +44,8 @@ jobs:
       - name: Configure CMake
         run: cmake -B build -S . -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
-      - name: Build and run tests
-        run: |
-          cmake --build build --config Debug
-          ctest --output-on-failure -C Debug
+      - name: Run Tests
+        run: cmake --build build --target execute-tests
 
   build-windows-mingw:
     runs-on: windows-latest
@@ -73,6 +64,6 @@ jobs:
         shell: msys2 {0}
         run: cmake -B build -S . -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug
 
-      - name: Build and run tests
+      - name: Run Tests
         shell: msys2 {0}
         run: cmake --build build --target execute-tests

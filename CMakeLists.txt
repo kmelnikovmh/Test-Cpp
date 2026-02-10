@@ -57,6 +57,6 @@ add_gtest(events-test test/events-test.cpp)
 add_gtest(run-day-test test/run-day-test.cpp)
 
 add_custom_target(execute-tests
-    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure $<$<CONFIG:Debug>:-C Debug>
+    COMMAND env GTEST_COLOR=1 ${CMAKE_CTEST_COMMAND} --verbose --output-on-failure
     DEPENDS parser-test club-test events-test run-day-test
 )
