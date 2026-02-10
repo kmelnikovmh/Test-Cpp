@@ -1,0 +1,66 @@
+name: C++ CI
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake clang clang-tidy g++ git wget ninja-build libgtest-dev
+          # Сборка GTest
+          cd /usr/src/gtest
+          sudo cmake .
+          sudo make
+          sudo cp lib/libgtest*.a /usr/lib/
+
+      - name: Show Compiler Versions
+        run: |
+          gcc --version
+          clang --version
+          cmake --version
+
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build Tests
+        run: cmake --build build
+
+      - name: Run Tests
+        run: env GTEST_COLOR=1 cmake --build build --target execute-tests
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+          C:\vcpkg\bootstrap-vcpkg.bat
+
+      - name: Install GTest
+        run: C:\vcpkg\vcpkg install gtest
+
+      - name: Show Compiler Versions
+        run: |
+          cl.exe || echo "MSVC not installed"
+          cmake --version
+
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+      - name: Build Tests
+        run: cmake --build build
+
+      - name: Run Tests
+        run: cmake --build build --target execute-tests
+  
