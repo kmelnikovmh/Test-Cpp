@@ -24,7 +24,7 @@ target_compile_options(test-app PRIVATE -Wall
                                     -Werror)
 
 
-# GTest, UBS Clang-Tidy, CppCheck
+# GTest,  UBSan/ASan, Clang-Tidy
 enable_testing()
 find_package(GTest REQUIRED)
 find_program(CLANG_TIDY_EXE NAMES clang-tidy)
