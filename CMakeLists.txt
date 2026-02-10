@@ -19,7 +19,7 @@ add_executable(test-app
 
 target_compile_options(test-app PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /permissive->
-    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wall -Wextra -Wpedantic -pedantic-errors -Werror>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -pedantic-errors -Werror>
 )
 
 
@@ -56,6 +56,6 @@ add_gtest(events-test test/events-test.cpp)
 add_gtest(run-day-test test/run-day-test.cpp)
 
 add_custom_target(execute-tests
-    COMMAND env GTEST_COLOR=1 ${CMAKE_CTEST_COMMAND} --verbose --output-on-failure
+    COMMAND env GTEST_COLOR=1 ${CMAKE_CTEST_COMMAND} --build-config Debug --verbose --output-on-failure
     DEPENDS parser-test club-test events-test run-day-test
 )
