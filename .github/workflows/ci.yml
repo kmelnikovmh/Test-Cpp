@@ -5,6 +5,7 @@ on:
     branches: ["*"]
   pull_request:
     branches: ["*"]
+  workflow_dispatch:
 
 jobs:
   linux:
@@ -37,30 +38,42 @@ jobs:
       - name: Run Tests
         run: env GTEST_COLOR=1 cmake --build build --target execute-tests
 
-  windows:
+    windows-msvc:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
-
-      - name: Install vcpkg
+      - name: Install dependencies
         run: |
-          git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
-          C:\vcpkg\bootstrap-vcpkg.bat
-
-      - name: Install GTest
-        run: C:\vcpkg\vcpkg install gtest
-
-      - name: Show Compiler Versions
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+          choco install visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools" -y
+      - name: Configure and build
+        shell: powershell
         run: |
-          cl.exe || echo "MSVC not installed"
-          cmake --version
+          mkdir build
+          cd build
+          cmake .. -G "Visual Studio 17 2022" -A x64
+          cmake --build . --config Release
+      - name: Run tests
+        shell: powershell
+        run: |
+          cd build
+          ctest -C Release -V
 
-      - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
-
-      - name: Build Tests
-        run: cmake --build build
-
-      - name: Run Tests
-        run: cmake --build build --target execute-tests
-  
+  windows-mingw:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: choco install mingw -y
+      - name: Configure and build
+        shell: powershell
+        run: |
+          mkdir build
+          cd build
+          cmake .. -G "MinGW Makefiles"
+          cmake --build .
+      - name: Run tests
+        shell: powershell
+        run: |
+          cd build
+          ctest -V
