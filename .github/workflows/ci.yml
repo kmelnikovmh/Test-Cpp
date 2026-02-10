@@ -38,7 +38,7 @@ jobs:
       - name: Run Tests
         run: env GTEST_COLOR=1 cmake --build build --target execute-tests
 
-    windows-msvc:
+  windows-msvc:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
