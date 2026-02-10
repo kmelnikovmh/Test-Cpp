@@ -8,72 +8,69 @@ on:
   workflow_dispatch:
 
 jobs:
-  linux:
+  linux-clang:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [clang++]
     steps:
       - uses: actions/checkout@v3
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake clang clang-tidy g++ git wget ninja-build libgtest-dev
-          # Сборка GTest
+          sudo apt-get install -y cmake g++ clang libgtest-dev
+          # Build GTest
           cd /usr/src/gtest
-          sudo cmake .
+          sudo cmake CMakeLists.txt
           sudo make
-          sudo cp lib/libgtest*.a /usr/lib/
-
-      - name: Show Compiler Versions
-        run: |
-          gcc --version
-          clang --version
-          cmake --version
+          sudo cp *.a /usr/lib
 
       - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+        run: cmake -B build -S . -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=Debug
 
-      - name: Build Tests
-        run: cmake --build build
+      - name: Build
+        run: cmake --build build -- -j$(nproc)
 
-      - name: Run Tests
-        run: env GTEST_COLOR=1 cmake --build build --target execute-tests
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
 
   windows-msvc:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64]
     steps:
       - uses: actions/checkout@v3
-      - name: Install dependencies
-        run: |
-          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-          choco install visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools" -y
-      - name: Configure and build
-        shell: powershell
-        run: |
-          mkdir build
-          cd build
-          cmake .. -G "Visual Studio 17 2022" -A x64
-          cmake --build . --config Release
+
+      - name: Configure CMake
+        run: cmake -B build -S . -G "Visual Studio 17 2022" -A ${{ matrix.arch }} -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build
+        run: cmake --build build --config Debug
+
       - name: Run tests
-        shell: powershell
-        run: |
-          cd build
-          ctest -C Release -V
+        run: ctest --test-dir build --output-on-failure
 
   windows-mingw:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v3
+        with:
+          update: true
+
       - name: Install dependencies
-        run: choco install mingw -y
-      - name: Configure and build
-        shell: powershell
         run: |
-          mkdir build
-          cd build
-          cmake .. -G "MinGW Makefiles"
-          cmake --build .
+          pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-google-test
+
+      - name: Configure CMake
+        run: cmake -B build -S . -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build
+        run: cmake --build build -- -j$(nproc)
+
       - name: Run tests
-        shell: powershell
-        run: |
-          cd build
-          ctest -V
+        run: ctest --test-dir build --output-on-failure
