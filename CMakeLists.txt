@@ -24,14 +24,23 @@ target_compile_options(test-app PRIVATE -Wall
                                     -Werror)
 
 
-# GTest
+# GTest, UBS Clang-Tidy, CppCheck
 enable_testing()
 find_package(GTest REQUIRED)
+find_program(CLANG_TIDY_EXE NAMES clang-tidy)
 
 function(add_gtest TEST_NAME TEST_SRC)
     add_executable(${TEST_NAME} ${TEST_SRC} src/parser.cpp src/events.cpp src/club-state.cpp src/run-day.cpp)
     target_link_libraries(${TEST_NAME} GTest::gtest_main)
     set_target_properties(${TEST_NAME} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    if(CLANG_TIDY_EXE)
+        add_custom_command(TARGET ${TEST_NAME} PRE_BUILD
+            COMMAND ${CMAKE_COMMAND} -E echo "Running clang-tidy for ${TEST_NAME}"
+        )
+        set_target_properties(${TEST_NAME} PROPERTIES
+            CXX_CLANG_TIDY "${CLANG_TIDY_EXE};-header-filter=^${PROJECT_SOURCE_DIR}/"
+        )
+    endif()
     target_compile_options(${TEST_NAME} PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
     target_link_options(${TEST_NAME} PRIVATE -fsanitize=address,undefined)
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
