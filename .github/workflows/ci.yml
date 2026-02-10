@@ -8,57 +8,58 @@ on:
   workflow_dispatch:
 
 jobs:
-  linux-clang:
+  linux:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        compiler: [clang++]
     steps:
       - uses: actions/checkout@v3
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake g++ clang libgtest-dev
-          # Build GTest
+          sudo apt-get install -y build-essential cmake clang clang-tidy g++ git wget ninja-build libgtest-dev
+          # Сборка GTest
           cd /usr/src/gtest
-          sudo cmake CMakeLists.txt
+          sudo cmake .
           sudo make
-          sudo cp *.a /usr/lib
-
+          sudo cp lib/libgtest*.a /usr/lib/
+      - name: Show Compiler Versions
+        run: |
+          gcc --version
+          clang --version
+          cmake --version
       - name: Configure CMake
-        run: cmake -B build -S . -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=Debug
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 
-      - name: Build
-        run: cmake --build build -- -j$(nproc)
+      - name: Build Tests
+        run: cmake --build build
 
-      - name: Run tests
-        run: ctest --test-dir build --output-on-failure
+      - name: Run Tests
+        run: env GTEST_COLOR=1 cmake --build build --target execute-tests
 
-  windows-msvc:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        arch: [x64]
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Configure CMake
-        run: cmake -B build -S . -G "Visual Studio 17 2022" -A ${{ matrix.arch }} -DCMAKE_BUILD_TYPE=Debug
-
-      - name: Build
-        run: cmake --build build --config Debug
-
-      - name: Run tests
-        run: ctest --test-dir build --output-on-failure
-
-  windows-mingw:
+  build-windows-msvc:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install MSYS2
-        uses: msys2/setup-msys2@v3
+      - name: Install dependencies via vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git C:/vcpkg
+          C:/vcpkg/bootstrap-vcpkg.bat
+          C:/vcpkg/vcpkg install gtest:x64-windows
+          setx VCPKG_ROOT "C:/vcpkg"
+
+      - name: Configure CMake
+        run: cmake -B build -S . -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+      - name: Build and run tests
+        run: cmake --build build --config Debug --target execute-tests
+
+  build-windows-mingw:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: msys2/setup-msys2@v2
         with:
           update: true
 
@@ -69,8 +70,6 @@ jobs:
       - name: Configure CMake
         run: cmake -B build -S . -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug
 
-      - name: Build
-        run: cmake --build build -- -j$(nproc)
-
-      - name: Run tests
-        run: ctest --test-dir build --output-on-failure
+      - name: Build and run tests
+        run: cmake --build build --target execute-tests
+        
