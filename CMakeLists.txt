@@ -22,3 +22,27 @@ target_compile_options(test-app PRIVATE -Wall
                                     -Wpedantic
                                     -pedantic-errors
                                     -Werror)
+
+
+# GTest
+enable_testing()
+find_package(GTest REQUIRED)
+
+function(add_gtest TEST_NAME TEST_SRC)
+    add_executable(${TEST_NAME} ${TEST_SRC} src/parser.cpp src/events.cpp src/club-state.cpp src/run-day.cpp)
+    target_link_libraries(${TEST_NAME} GTest::gtest_main)
+    set_target_properties(${TEST_NAME} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    target_compile_options(${TEST_NAME} PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
+    target_link_options(${TEST_NAME} PRIVATE -fsanitize=address,undefined)
+    add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+endfunction()
+
+add_gtest(parser-test test/parser-test.cpp)
+add_gtest(club-test test/club-test.cpp)
+add_gtest(events-test test/events-test.cpp)
+add_gtest(run-day-test test/run-day-test.cpp)
+
+add_custom_target(execute-tests
+    COMMAND env GTEST_COLOR=1 ${CMAKE_CTEST_COMMAND} --verbose --output-on-failure
+    DEPENDS parser-test club-test events-test run-day-test
+)
