@@ -16,12 +16,11 @@ add_executable(test-app
                src/events.cpp
                src/club-state.cpp
                src/run-day.cpp)
-               
-target_compile_options(test-app PRIVATE -Wall
-                                    -Wextra
-                                    -Wpedantic
-                                    -pedantic-errors
-                                    -Werror)
+
+target_compile_options(test-app PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /permissive->
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wall -Wextra -Wpedantic -pedantic-errors -Werror>
+)
 
 
 # GTest,  UBSan/ASan, Clang-Tidy

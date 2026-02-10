@@ -58,24 +58,22 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install dependencies via vcpkg
+      - name: Install vcpkg + gtest
         run: |
           git clone https://github.com/microsoft/vcpkg.git C:/vcpkg
           C:/vcpkg/bootstrap-vcpkg.bat
           C:/vcpkg/vcpkg install gtest:x64-windows
           setx VCPKG_ROOT "C:/vcpkg"
 
-      - name: Configure CMake
+      - name: Configure
         run: >
-          cmake -B build -S .
+          cmake -S . -B build
           -G "Visual Studio 17 2022"
           -A x64
-          -T ClangCL
           -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
       - name: Build
         run: cmake --build build --config Debug
 
-      - name: Run Tests
+      - name: Run tests
         run: ctest --test-dir build -C Debug --output-on-failure
-        
