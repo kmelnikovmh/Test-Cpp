@@ -52,7 +52,9 @@ jobs:
         run: cmake -B build -S . -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
       - name: Build and run tests
-        run: cmake --build build --config Debug --target execute-tests
+        run: |
+          cmake --build build --config Debug
+          ctest --output-on-failure -C Debug
 
   build-windows-mingw:
     runs-on: windows-latest
@@ -62,14 +64,15 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           update: true
-
-      - name: Install dependencies
-        run: |
-          pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-google-test
+          install: >
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-google-test
 
       - name: Configure CMake
+        shell: msys2 {0}
         run: cmake -B build -S . -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug
 
       - name: Build and run tests
+        shell: msys2 {0}
         run: cmake --build build --target execute-tests
-        

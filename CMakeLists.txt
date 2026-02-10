@@ -33,6 +33,7 @@ function(add_gtest TEST_NAME TEST_SRC)
     add_executable(${TEST_NAME} ${TEST_SRC} src/parser.cpp src/events.cpp src/club-state.cpp src/run-day.cpp)
     target_link_libraries(${TEST_NAME} GTest::gtest_main)
     set_target_properties(${TEST_NAME} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+
     if(CLANG_TIDY_EXE)
         add_custom_command(TARGET ${TEST_NAME} PRE_BUILD
             COMMAND ${CMAKE_COMMAND} -E echo "Running clang-tidy for ${TEST_NAME}"
@@ -41,8 +42,12 @@ function(add_gtest TEST_NAME TEST_SRC)
             CXX_CLANG_TIDY "${CLANG_TIDY_EXE};-header-filter=^${PROJECT_SOURCE_DIR}/"
         )
     endif()
-    target_compile_options(${TEST_NAME} PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
-    target_link_options(${TEST_NAME} PRIVATE -fsanitize=address,undefined)
+
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+        target_compile_options(${TEST_NAME} PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
+        target_link_options(${TEST_NAME} PRIVATE -fsanitize=address,undefined)
+    endif()
+
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
 endfunction()
 
@@ -52,6 +57,6 @@ add_gtest(events-test test/events-test.cpp)
 add_gtest(run-day-test test/run-day-test.cpp)
 
 add_custom_target(execute-tests
-    COMMAND env GTEST_COLOR=1 ${CMAKE_CTEST_COMMAND} --verbose --output-on-failure
+    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure $<$<CONFIG:Debug>:-C Debug>
     DEPENDS parser-test club-test events-test run-day-test
 )
