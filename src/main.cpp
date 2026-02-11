@@ -23,18 +23,17 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    auto [table_count, open_time, close_time, cost_per_hour] = test_cpp::parse_club_config(file_cin);
-    test_cpp::ClubState club(table_count, cost_per_hour, open_time, close_time);
+    auto config = test_cpp::parse_club_config(file_cin);
+    test_cpp::ClubState club(config);
 
-    auto config = test_cpp::ClubInitConfig{table_count, open_time, close_time, cost_per_hour};
     test_cpp::EventsInput input_events = test_cpp::parse_events(file_cin, config);
 
     test_cpp::Events all_events = test_cpp::run_day(input_events, club);
 
-    std::cout << std::format("{:%H:%M}", open_time) << "\n";
+    std::cout << std::format("{:%H:%M}", config.open_time) << "\n";
     for (auto& ev : all_events) {
         std::visit([&](auto& e){ e.print_fields(); }, ev);
     }
-    std::cout << std::format("{:%H:%M}", close_time) << "\n";
+    std::cout << std::format("{:%H:%M}", config.close_time) << "\n";
     club.print_state();
 }

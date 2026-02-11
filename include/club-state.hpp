@@ -44,17 +44,22 @@ private:
     std::unordered_map<std::string, ClientInfo> m_clients;
 
     int m_cost_table_per_hour;
-    std::chrono::minutes m_time_to_open;
-    std::chrono::minutes m_time_to_close;
+    std::chrono::minutes m_open_time;
+    std::chrono::minutes m_close_time;
 
 public:
-    ClubState(int count_tables,
-              int cost_table_per_hour,
-              std::chrono::minutes time_to_open,
-              std::chrono::minutes time_to_close) : m_tables(count_tables),
-                                                    m_cost_table_per_hour(cost_table_per_hour),
-                                                    m_time_to_open(time_to_open),
-                                                    m_time_to_close(time_to_close) {}
+    ClubState(int table_count,
+              int cost_per_hour,
+              std::chrono::minutes open_time,
+              std::chrono::minutes close_time) : m_tables(table_count),
+                                                 m_cost_table_per_hour(table_count),
+                                                 m_open_time(open_time),
+                                                 m_close_time(close_time) {}
+
+    ClubState(const ClubInitConfig &club_config) : m_tables(club_config.table_count),
+                                                   m_cost_table_per_hour(club_config.cost_per_hour),
+                                                   m_open_time(club_config.open_time),
+                                                   m_close_time(club_config.close_time) {}
 
     // State
     bool is_open(std::chrono::minutes time) const;

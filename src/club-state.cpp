@@ -17,7 +17,7 @@ constexpr int ROUNDING_BIAS = 59;
 
 // State
 bool ClubState::is_open(std::chrono::minutes time) const {
-    return m_time_to_open <= time && time < m_time_to_close;
+    return m_open_time <= time && time < m_close_time;
 }
 
 bool ClubState::has_client(const std::string& name) const {
@@ -68,7 +68,7 @@ void ClubState::print_state() const {
 
 // Get
 std::chrono::minutes ClubState::get_time_to_close() const {
-    return m_time_to_close;
+    return m_close_time;
 }
 
 int ClubState::get_id_table_from_client(const std::string& name) const {
