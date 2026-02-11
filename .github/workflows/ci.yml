@@ -1,0 +1,73 @@
+name: Just CI
+
+on:
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake clang clang-tidy g++ git wget ninja-build libgtest-dev
+          cd /usr/src/gtest
+          sudo cmake .
+          sudo make
+          sudo cp lib/libgtest*.a /usr/lib/
+
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Run Tests
+        run: cmake --build build --target execute-tests
+
+  windows-mingw:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-gtest
+            mingw-w64-x86_64-make
+            mingw-w64-x86_64-ninja
+          msystem: MINGW64
+          path-type: minimal
+
+      - name: Configure CMake
+        shell: msys2 {0}
+        run: cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Run Tests
+        shell: msys2 {0}
+        run: cmake --build build --target execute-tests
+
+  windows-msvc:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install vcpkg + gtest
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git C:/vcpkg
+          C:/vcpkg/bootstrap-vcpkg.bat
+          C:/vcpkg/vcpkg install gtest:x64-windows
+          setx VCPKG_ROOT "C:/vcpkg"
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -G "Visual Studio 17 2022"
+          -A x64
+          -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+      - name: Run tests
+        run: cmake --build build --target execute-tests --config Debug
