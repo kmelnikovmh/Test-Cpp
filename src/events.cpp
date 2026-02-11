@@ -10,13 +10,6 @@
 
 namespace test_cpp {
 
-// Корретность ввода это парсер
-// Проверка на уровне клуба включает в себя только те случаи, которые нарушают правила cpp языка текущей реализации и ведут к UB: проверка обращения id, наличие клиента при обращении к его полям
-// Вся бизнес логика проверки вынесена в apply_to_club, что дает максимальную гибкость в расширении процессов с минимальным переписыванием клуба. Например, добавление событий, которые могут происходить вне времени открытия клуба или с клиентами, которых еще нет в клубе
-// В связи с этим, так как класс Клуба легко сломать вызвав любой сеттер вне бизнес логики, то данная возможная есть только у BaseEvent и его наследникво
-
-// Проверка бизнес логики на уровне событий
-
 BaseEvent::BaseEvent(std::chrono::minutes time_exec, EventID id) : m_time_exec(time_exec), m_id(id) {}
 
 // EventClientArrived
@@ -48,7 +41,6 @@ EventClientSitDownAtTable::EventClientSitDownAtTable(std::chrono::minutes time_e
                                                                      m_client_name(client_name), 
                                                                      m_table_id(table_id) {}
 
-// Нет по ТЗ NotOpenYet (учтено инвариантом клиенты уходят после закрытия и клиента нет раньше прихода)
 std::optional<EventVariant> EventClientSitDownAtTable::apply_to_club(ClubState &club) const {
     if (!club.is_free_table(m_table_id)) {
         return EventError(m_time_exec, EventID::Error, "PlaceIsBusy");
